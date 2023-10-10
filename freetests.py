@@ -204,14 +204,14 @@ class TestHTTPClient(unittest.TestCase):
         self.assertTrue(req != None, "None Returned!")
         self.assertTrue(req.code == 200,"Code is %s but I wanted a 200 OK" % req.code)
 
-        
-        
-    # consider disabling this test until everything else works
+
+
+#     # consider disabling this test until everything else works
     def testInternetGets(self):
         '''Test HTTP Get in the wild, these webservers are far less
            forgiving'''
         MyHTTPHandler.get = echo_path_get
-        http = httpclass.HTTPClient()        
+        http = httpclass.HTTPClient()
         urls = [
             "http://www.cs.ualberta.ca/",
             "http://softwareprocess.es/static/SoftwareProcess.es.html",
@@ -225,15 +225,15 @@ class TestHTTPClient(unittest.TestCase):
                 print("An Exception was thrown for %s" % url)
                 self.assertTrue( False, "An Exception was thrown for %s %s" % (url,e))
             self.assertTrue(req != None, "None Returned! %s" % url)
-            self.assertTrue(req.code == 200 or 
+            self.assertTrue(req.code == 200 or
                             req.code == 301 or
                             req.code == 302,
                             "Code: %s for %s" % (req.code, url))
             if (req.code == 200):
-                self.assertTrue(req.body.find("DOCTYPE")>=0 or 
-                                req.body.find("<body")>=0 , 
+                self.assertTrue(req.body.find("DOCTYPE")>=0 or
+                                req.body.find("<body")>=0 ,
                                 "%s Data: [%s] " % (url,req.body))
-    
+
     def testPOST(self):
         '''Test HTTP POST with an echo server'''
         MyHTTPHandler.post = echo_post
@@ -257,7 +257,7 @@ class TestHTTPClient(unittest.TestCase):
             self.assertTrue(args[key] == outargs[key][0], "Key [%s] not found" % key)
 
     @classmethod
-    def tearDownClass(self):        
+    def tearDownClass(self):
         if (TestHTTPClient.httpd!=None):
             print("HTTP Shutdown in tearDown\n")
             TestHTTPClient.httpd.shutdown()
