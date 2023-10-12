@@ -28,7 +28,7 @@ def help():
     print("httpclient.py [GET/POST] [URL]\n")
 
 class HTTPResponse(object):
-    def __init__(self, code=200, body=""):
+    def __init__(self, code, body=""):
         self.code = code
         self.body = body
 
@@ -67,30 +67,34 @@ class HTTPClient(object):
 
     def GET(self, url, args=None):
         try:
-            parsed_url = urllib.parse.urlparse(url)
-            host = parsed_url.hostname
+            urlPieces = urllib.parse.urlparse(url)
+            host = urlPieces.hostname
 
-            port = parsed_url.port
+            port = urlPieces.port
             if port is None:
                 port = 80
 
-            path = parsed_url.path
+            path = urlPieces.path
             if path == '':
                 path = '/'
 
             self.connect(host, port)
 
-            # Send an HTTP GET request
-            self.sendall(f'GET {path} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n')
+            headers = (f'GET {path} HTTP/1.1\r\n'
+                       f'Host: {host}\r\n'
+                       f'Connection: close\r\n\r\n')
 
-            # Receive the response
+            self.sendall(headers)
+
             response = self.recvall(self.socket)
 
             headers = self.get_headers(response)
             body = self.get_body(response)
             code = self.get_code(response)
+            print(response)
 
             return HTTPResponse(int(code), body)
+
         except Exception as e:
             return HTTPResponse(404, str(e))
         finally:
@@ -98,33 +102,37 @@ class HTTPClient(object):
 
     def POST(self, url, args=None):
         try:
-            # Parse the URL to get host and port
-            parsed_url = urllib.parse.urlparse(url)
-            host = parsed_url.hostname
-            port = parsed_url.port
-            path = parsed_url.path
-            # if path[0] == '/':
-            #     path = path[1:] + '/'
+
+            urlPieces = urllib.parse.urlparse(url)
+            host = urlPieces.hostname
+            port = urlPieces.port
+            path = urlPieces.path
+
+            if path[0] == '/':
+                path = path[1:] + '/'
+
             self.connect(host, port)
 
-            # Prepare the headers and data for the POST request
-            data = urllib.parse.urlencode(args) if args else ""
+            if args:
+                body = urllib.parse.urlencode(args)
+            else:
+                body = ""
 
-            headers = (f'Content-type: application/x-www-form-urlencoded\r\n'
+            headers = (f'POST {path} HTTP/1.1\r\n'
+                       f'Content-type: application/x-www-form-urlencoded\r\n'
                        f'Host: {host}\r\n'
-                       f'Content-length: {len(data)}\r\n\r\n'
-                       f'{data}')
+                       f'Content-length: {len(body)}\r\n\r\n'
+                       f'{body}')
 
-            request = f'POST {path} HTTP/1.1\r\n{headers}'
-            self.socket.sendall(request.encode('utf-8'))
-            # Receive the response
+            self.socket.sendall(headers.encode('utf-8'))
 
             response = self.recvall(self.socket)
+            print(response)
             code = self.get_code(response)
             body = self.get_body(response)
 
-            # Return the HTTPResponse object
             return HTTPResponse(int(code), body)
+
         except Exception as e:
             print('POST request failed:', e)
             return HTTPResponse(404, str(e))
