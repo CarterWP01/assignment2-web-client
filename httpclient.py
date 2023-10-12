@@ -44,7 +44,7 @@ class HTTPClient(object):
         return data.split('\r\n')[0].strip().split(' ')[1]
 
     def get_headers(self,data):
-        return data.split('\r\n\r\n')[0].split('\n')[1:]
+        return data.split('\r\n\r\n')[0].split('\r\n')[1:]
 
     def get_body(self, data):
         return data.split('\r\n\r\n')[-1]
@@ -88,12 +88,11 @@ class HTTPClient(object):
             self.sendall(headers)
 
             response = self.recvall(self.socket)
-
             print(f'response:\n{response}')
 
-            body = self.get_body(response)
-            code = self.get_code(response)
             headers = self.get_headers(response)
+            code = self.get_code(response)
+            body = self.get_body(response)
 
             return HTTPResponse(int(code), body)
 
@@ -105,17 +104,17 @@ class HTTPClient(object):
     def POST(self, url, args=None):
         try:
 
-            urlPieces = up.urlparse(url)
-            host = urlPieces.hostname
-            port = urlPieces.port
-            path = urlPieces.path
+            parse = up.urlparse(url)
+            host = parse.hostname
+            port = parse.port
+            path = parse.path
 
             if path[0] == '/':
                 path = path[1:] + '/'
 
             self.connect(host, port)
 
-            if args:
+            if args is not None:
                 body = up.urlencode(args)
             else:
                 body = ""
