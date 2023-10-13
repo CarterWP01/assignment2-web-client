@@ -67,58 +67,73 @@ class HTTPClient(object):
 
     def GET(self, url, args=None):
         try:
+            # parse the URL and decompose it into host, port, and path
             parse = up.urlparse(url)
             host = parse.hostname
-
             port = parse.port
+            path = parse.path
+
+            # If port isn't specified, use default port 80
             if port is None:
                 port = 80
 
-            path = parse.path
+            # If path is null, set it to default directory '/'
             if path == '':
                 path = '/'
 
+            # Connect to server
             self.connect(host, port)
 
+            # Set the Headers
             headers = (f'GET {path} HTTP/1.1\r\n'
                        f'Host: {host}\r\n'
                        f'Connection: close\r\n\r\n')
-            print(headers)
 
+            # Send the request
             self.sendall(headers)
 
+            # Receive and print the response
             response = self.recvall(self.socket)
             print(f'response:\n{response}')
 
-            headers = self.get_headers(response)
+            # Get the code and body of response and send as an HTTPResponse object
+            # headers = self.get_headers(response)
             code = self.get_code(response)
             body = self.get_body(response)
 
             return HTTPResponse(int(code), body)
 
         except Exception as e:
-            return HTTPResponse(404, str(e))
+            print(e)
         finally:
             self.close()
 
     def POST(self, url, args=None):
         try:
-
+            # parse the URL and decompose it into host, port, and path
             parse = up.urlparse(url)
             host = parse.hostname
             port = parse.port
             path = parse.path
 
-            if path[0] == '/':
-                path = path[1:] + '/'
+            # If port isn't specified, use default port 80
+            if port is None:
+                port = 80
 
+            # If path is null, set it to default directory '/'
+            if path == '':
+                path = '/'
+
+            # Connect to server
             self.connect(host, port)
 
+            # If args are present, encode them, else, set them as empty string
             if args is not None:
                 body = up.urlencode(args)
             else:
                 body = ""
 
+            # Create the Headers and send the request
             headers = (f'POST {path} HTTP/1.1\r\n'
                        f'Host: {host}\r\n'
                        f'Content-type: application/x-www-form-urlencoded\r\n'
@@ -127,18 +142,19 @@ class HTTPClient(object):
 
             self.sendall(headers)
 
+            # Receive and print the response
             response = self.recvall(self.socket)
             print(f'response:\n{response}')
 
-            headers = self.get_headers(response)
+            # Get the code and body of response and send as an HTTPResponse object
+            # headers = self.get_headers(response)
             code = self.get_code(response)
             body = self.get_body(response)
 
             return HTTPResponse(int(code), body)
 
         except Exception as e:
-            print('POST request failed:', e)
-            return HTTPResponse(404, str(e))
+            print(e)
         finally:
             self.close()
 
